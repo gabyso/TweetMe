@@ -84,7 +84,7 @@ app.get("/", function(req, res) {
 
 // get back to primary route (UI)
 app.get("/back", function(req, res) {
-  res.redirect("/");
+  res.sendFile("/");
 });
 
 //list of tweets for  the UI
