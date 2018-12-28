@@ -2,68 +2,110 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const request = require("request");
+const Twitter = require('twitter');
 
 const app = express();
 
-const PORT = 3000;
-
 app.use(express.static("public"));
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
-app.get("/", function(req, res){
-  res.sendFile(__dirname + "/signup.html");
+// creates user based authetication
+const client = new Twitter({
+  consumer_key: process.env.API_key,
+  consumer_secret: process.env.API_Secrets,
+  access_token_key: process.env.Access_token,
+  access_token_secret: process.env.Access_token_Secrets
 });
 
-app.post("/", function(req, res) {
-  var name = req.body.fName;
-  var last = req.body.lName;
-  var email = req.body.email;
+//*********************** functions ***********************
 
-  var data = {
-    members: [
-      {
-        email_address: email,
-        status: "subscribed",
-        merge_fields: {
-          FNAME: name,
-          LNAME: last
-        }
-      }
-    ]
-  };
+// display tweets as simple HTML
+function showTweets(tweet, res){
+  res.write('<html><body>');
+  for(var i = 0; i < tweet.length; i++){
+    res.write("<h1>" + tweet[i].text + "</h1>");
+  }
+  res.write('<form action="/back" method="post"><button>Back</button></form></body></html>');
+  res.end();
+}
 
-  var jsonData = JSON.stringify(data);
-
-  var options = {
-    url: "https://us7.api.mailchimp.com/3.0/lists/aa4a4f68ee",
-    method: "POST",
-    headers: {
-      "Authorization": "gaby1 008266b0fd2df83ae38880c8415def05-us7"
-    },
-    body: jsonData
-  };
-
-  request(options, function(err, response, body){
-    if(err || response.statusCode !== 200) {
-      res.sendFile(__dirname + "/failure.html");
+// using Twitter API to get list of the last 20 tweets if there is more than 20 from a spesific user's wall
+function getTweets(res, ui){
+  client.get('statuses/user_timeline', {count: 20}, function(error, tweet, response) {
+    if (error){
+      res.sendFile(__dirname, "/failure.html");
+    }
+    else if(ui){ // if the request is from the UI
+      showTweets(tweet, res); // shows tweets in a simple html
     }
     else {
-      res.sendFile(__dirname + "/success.html");
+      res.json(tweet); // sends back a JSON file
     }
-  })
+  });
+}
+
+// using Twitter API to Tweet into spesific user's wall
+function sendTweets(message, res, ui){
+
+  client.post('statuses/update', {
+    status: message
+  }, function(error, tweet, response) {
+    if (error) {
+      if(ui) res.sendFile(__dirname, "/failure.html");
+      else res.send("Sorry, there is an error with the twitter-API");
+    }
+    else{
+      var status = response.statusCode;
+
+      res.status = status; //set the HTML status code to response
+
+      if(ui){ // if the request is from the UI
+        if(status === 200){
+          res.sendFile(__dirname + "/success.html");
+        } else res.sendFile("/failure.html");
+      }
+      else if(status === 200){  // if the request was not from the UI
+        res.send("Wowwwwww what a brillient tweet!!");
+      }
+      else res.send("Error, Status Code:" + status);
+    }
+  });
+}
+
+app.get("/", function(req, res) {
+  res.sendFile(__dirname + "/index.html");
 });
 
-app.post("/failure", function(req, res){
+app.post("/gaby", function(req, res){
+  res.status(200).send('');
+  console.log(res.statusCode);
+});
+
+app.post("/tweet-ui", function(req, res) {
+  var message = req.body.msg;
+  sendTweets(message, res, true);
+});
+
+app.post("/tweet", function(req, res) {
+  var message = req.body.msg;
+  sendTweets(message, res, false);
+});
+
+app.get("/show-list", function(req, res) {
+  getTweets(res, true);
+});
+
+app.get("/list-JSON", function(req, res) {
+  getTweets(res, false);
+});
+
+app.post("/back", function(req, res) {
   res.redirect("/");
 });
 
-app.listen(process.env.PORT || PORT, function(){
-  console.log("Server is running");
+app.listen(process.env.PORT || 3000, function() {
+  console.log("Server is running!");
 });
-
-//API key
-// 008266b0fd2df83ae38880c8415def05-us7
-
-//list ID
-// aa4a4f68ee
