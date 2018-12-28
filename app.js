@@ -28,7 +28,7 @@ function showTweets(tweet, res){
   for(var i = 0; i < tweet.length; i++){
     res.write("<h1>" + tweet[i].text + "</h1>");
   }
-  res.write('<form action="/back" method="post"><button>Back</button></form></body></html>');
+  res.write('<form action="/" method="get"><button>Back</button></form></body></html>');
   res.end();
 }
 
@@ -36,7 +36,7 @@ function showTweets(tweet, res){
 function getTweets(res, ui){
   client.get('statuses/user_timeline', {count: 20}, function(error, tweet, response) {
     if (error){
-      res.sendFile(__dirname, "/failure.html");
+      res.sendFile(__dirname, "/public/HTML/failure.html");
     }
     else if(ui){ // if the request is from the UI
       showTweets(tweet, res); // shows tweets in a simple html
@@ -54,7 +54,7 @@ function sendTweets(message, res, ui){
     status: message
   }, function(error, tweet, response) {
     if (error) {
-      if(ui) res.sendFile(__dirname, "/failure.html");
+      if(ui) res.sendFile(__dirname, "/public/HTML/failure.html");
       else res.send("Sorry, there is an error with the twitter-API");
     }
     else{
@@ -64,8 +64,8 @@ function sendTweets(message, res, ui){
 
       if(ui){ // if the request is from the UI
         if(status === 200){
-          res.sendFile(__dirname + "/success.html");
-        } else res.sendFile("/failure.html");
+          res.sendFile(__dirname + "/public/HTML/success.html");
+        } else res.sendFile("/public/HTML/failure.html");
       }
       else if(status === 200){  // if the request was not from the UI
         res.send("Wowwwwww what a brillient tweet!!");
@@ -79,7 +79,7 @@ function sendTweets(message, res, ui){
 
 // UI
 app.get("/", function(req, res) {
-  res.sendFile(__dirname + "/index.html");
+  res.sendFile(__dirname + "/public/HTML/index.html");
 });
 
 //list of tweets for  the UI
