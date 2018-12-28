@@ -75,36 +75,42 @@ function sendTweets(message, res, ui){
   });
 }
 
+//*********************** GET request ***********************
+
+// UI
 app.get("/", function(req, res) {
   res.sendFile(__dirname + "/index.html");
 });
 
-app.post("/gaby", function(req, res){
-  res.status(200).send('');
-  console.log(res.statusCode);
+// get back to primary route (UI)
+app.get("/back", function(req, res) {
+  res.redirect("/");
 });
 
+//list of tweets for  the UI
+app.get("/show-list", function(req, res) {
+  getTweets(res, true);
+});
+
+//list of tweets as JSON
+app.get("/list-JSON", function(req, res) {
+  getTweets(res, false);
+});
+
+//*********************** POST request ***********************
+
+// tweet UI
 app.post("/tweet-ui", function(req, res) {
   var message = req.body.msg;
   sendTweets(message, res, true);
 });
 
+// tweet without UI
 app.post("/tweet", function(req, res) {
   var message = req.body.msg;
   sendTweets(message, res, false);
 });
 
-app.get("/show-list", function(req, res) {
-  getTweets(res, true);
-});
-
-app.get("/list-JSON", function(req, res) {
-  getTweets(res, false);
-});
-
-app.post("/back", function(req, res) {
-  res.redirect("/");
-});
 
 app.listen(process.env.PORT || 3000, function() {
   console.log("Server is running!");
