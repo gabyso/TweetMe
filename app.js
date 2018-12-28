@@ -82,11 +82,6 @@ app.get("/", function(req, res) {
   res.sendFile(__dirname + "/index.html");
 });
 
-// get back to primary route (UI)
-app.get("/back", function(req, res) {
-  res.sendFile("/");
-});
-
 //list of tweets for  the UI
 app.get("/show-list", function(req, res) {
   getTweets(res, true);
